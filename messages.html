@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/master.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script type="module" src="scripts/app.js" charset="utf-8" defer></script>
+    <style media="screen">
+
+      div.green {
+        background: rgb(41, 175, 146);
+      }
+
+      div.circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        margin: 0 5px 0 5px;
+      }
+
+      .user-info-container {
+        display: none;
+      }
+
+      @media (min-width: 768px) {
+        section.user-info-container {
+          display: block;
+          width: 300px;
+          background: rgb(41, 175, 146);
+          border-right: 1px solid rgb(41, 175, 146);
+          padding: 20px;
+          box-sizing: border-box;
+        }
+      }
+
+      section.messages-container {
+        flex-grow: 1;
+        padding: 30px;
+      }
+
+      button {
+        border: none;
+        background: rgb(41, 175, 146);
+        height: 24px;
+        border-radius: 12px;
+        color: white;
+        margin: 0 5px 0 5px;
+      }
+
+      button:hover {
+        background: rgb(36, 157, 131);
+      }
+
+      .messages-container h1 {
+        margin: 20px 0 20px 0;
+      }
+
+      .user-info-container button {
+        background: white;
+        color: rgb(36, 157, 131);
+      }
+
+      .message-summary {
+        border-bottom: 1px solid rgb(36, 157, 131);
+        padding: 10px;
+      }
+
+      .message-summary:hover {
+        background: #f6fff9;
+      }
+
+      .user-info-container {
+        color: white;
+      }
+
+      .white {
+        background: white;
+      }
+
+      .large-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        margin: 0 5px 0 5px;
+      }
+
+      .user-info-list {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding: 5px;
+      }
+
+      .user-info-item {
+        display: flex;
+        align-items: center;
+        padding: 5px;
+      }
+
+      .user-info-container h1 {
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="split-contents">
+        <img src="images/dino-chat-logo.svg" height="40px" alt="DinoChat">
+        <div class="flex-container">
+          <div class="green circle"></div>
+          <div class="green circle"></div>
+          <div class="green circle"></div>
+        </div>
+      </header>
+      <main class="flex-grow flex-container">
+        <section class="user-info-container">
+          <div class="flex-container flex-center">
+            <div class="white large-circle"></div>
+            <div>
+              <h1 style="margin:0;">{{ full_name }}</h1>
+              <address>{{ location }}</address>
+            </div>
+          </div>
+            <div class="user-info-list">
+            <div class="user-info-item">
+              <div class="white circle"></div>
+              <span>{{ birthday }}</span>
+            </div>
+            <div class="user-info-item">
+              <div class="white circle"></div>
+              <span>{{ email }}</span>
+            </div>
+            <div class="user-info-item">
+              <div class="white circle"></div>
+              <span>{{ star_sign }}</span>
+            </div>
+          </div>
+          <div class="user-info-list">
+            <h1>Frequent</h1>
+            <div v-for="friend in frequent_friends" class="user-info-item">
+              <div class="white circle"></div>
+              <span>{{ friend.full_name }}</span>
+            </div>
+          </div>
+        </section>
+        <section class="flex-grow messages-container">
+          <div class="split-contents">
+            <div>
+              <div class="button">Create Group</div>
+              <div class="button">Edit Groups</div>
+            </div>
+            <div class="search-bar" style="display:flex;">
+              <span style="width:2em;background:var(--primary-color)"></span>
+              <input style="flex-grow:1;" type="text" name="" value=""/>
+            </div>
+          </div>
+          <div>
+            <h1>Messages</h1>
+            <div class="message-summary-list">
+              <div v-for="message in messages" class="split-contents message-summary">
+                <div class="flex-container flex-center">
+                <div class="green circle"></div>
+                <b>{{ message.from }}</b>
+                </div>
+                <span>{{ message.text }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
