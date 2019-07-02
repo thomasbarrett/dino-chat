@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <style media="screen">
+      * {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 50px 0 50px 0;
+        height: 100vh;
+        background:  #9fdfdf;
+        font-family: sans-serif;
+      }
+
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+
+      .login-border {
+        height: 100%;
+      }
+
+      .login-container {
+        width: 800px;
+        margin: auto;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 50% 50%;
+      }
+
+      .login-element-left {
+        max-height: 400px;
+        padding: 30px;
+        border-radius: 5px 0 0 5px ;
+        background: #0A3F60;
+        color: white;
+        box-shadow: 2px 2px 5px grey;
+      }
+
+      .login-element-right {
+        max-height: 400px;
+        padding: 30px;
+        border-radius: 0 5px 5px 0;
+        background: white;
+        color: #158898;
+        box-shadow: 2px 2px 5px grey;
+      }
+
+      h1 {
+        margin: 20px 0 20px 0;
+      }
+
+      .login-container span {
+        display: inline-block;
+        width: 80px;
+        text-align: right;
+      }
+
+      .login-element-right input {
+        border-bottom: 1px solid #158898;
+        color: #FE8E8E;
+      }
+
+      .login-element-left input {
+        border-bottom: 1px solid white;
+        color: white;
+      }
+
+input[type=text]:focus, input[type=password]:focus  {outline:none;}
+
+      input {
+        padding: 5px;
+        font-size: 1em;
+        margin: 10px 0 10px 0;
+        background: none;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="login-border">
+    <div class="login-container">
+      <div class="login-element-left">
+        <h1>Login</h1>
+        <span>email:</span>
+        <input type="text" name="" >
+        <br/>
+        <span>password:</span>
+        <input type="password" name="" >
+        <br/>
+      </div>
+      <div class="login-element-right">
+        <h1 style="color: #158898">Create Account</h1>
+        <span>email:</span>
+        <input type="text" name="">
+        <br/>
+        <span>password:</span>
+        <input type="password" name="">
+        <br/>
+        <span>password:</span>
+        <input type="password" name="">
+        <br/>
+      </div>
+    </div>
+    </div>
+  </body>
+</html>

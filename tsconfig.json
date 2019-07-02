@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "removeComments": true,
+        "target": "es6",
+        "outDir": "dst",
+        "rootDir": "src"
+    },
+    "include": [
+        "src/models/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+    ]
+}

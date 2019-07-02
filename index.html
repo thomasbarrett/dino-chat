@@ -2,109 +2,231 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>DinoChat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
     <style media="screen">
-      * {
-        margin: 0;
-        padding: 0;
-        border: 0;
-        box-sizing: border-box;
-      }
 
       body {
+        padding: 0;
         margin: 0;
-        padding: 50px 0 50px 0;
-        height: 100vh;
-        background:  #9fdfdf;
         font-family: sans-serif;
       }
 
-      .login-border {
+      #app {
+        width: 100%;
+        height: 100vh;
+      }
+
+      .admin-page {
+        box-sizing: border-box;
+        width: 100%;
         height: 100%;
+        padding: 50px;
+        display: grid;
       }
 
       .login-container {
-        width: 800px;
-        margin: auto;
+        width: 100%;
         height: 100%;
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: minmax(min-content, 400px);
+        justify-content: center;
+        align-items: center;
       }
 
-      .login-element-left {
-        max-height: 400px;
-        padding: 30px;
-        border-radius: 5px 0 0 5px ;
-        background: #0A3F60;
-        color: white;
-        box-shadow: 2px 2px 5px grey;
+      .login-container .login-border {
+        border: 1px solid black;
+        padding: 20px;
       }
 
-      .login-element-right {
-        max-height: 400px;
-        padding: 30px;
-        border-radius: 0 5px 5px 0;
-        background: white;
-        color: #158898;
-        box-shadow: 2px 2px 5px grey;
-      }
-
-      h1 {
+      .login-container h1 {
         margin: 20px 0 20px 0;
       }
 
-      .login-container span {
-        display: inline-block;
-        width: 80px;
+      table {
+        border-collapse: collapse;
+        border: 1px solid black;
+      }
+
+      td, tr, th {
+        padding: 5px;
+        border: 1px solid black;
+      }
+
+      .login-container input {
+        box-sizing: border-box;
+        margin: 10px 0 10px 0;
+        width: 100%;
+        height: 30px;
+      }
+
+      .login-container button {
+        box-sizing: border-box;
+        margin: 5px 0 5px 0;
+        width: 100%;
+        height: 30px;
+      }
+
+      .main-page {
+        display: grid;
+        width: 100%;
+        height: 100%;
+        grid-template-columns: 400px 1fr;
+        grid-template-rows: min-content 1fr;
+      }
+
+      .main-page header {
+        grid-column: 1 / span 2;
+        border-bottom: 1px solid black;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+      }
+
+      .main-page header h1 {
+        margin: 0;
+      }
+
+      .messages-list {
+        list-style-type: none;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .right {
         text-align: right;
       }
 
-      .login-element-right input {
-        border-bottom: 1px solid #158898;
-        color: #FE8E8E;
-      }
-
-      .login-element-left input {
-        border-bottom: 1px solid white;
-        color: white;
-      }
-
-input[type=text]:focus, input[type=password]:focus  {outline:none;}
-
-      input {
+      .messages-list span {
+        display: inline-block;
+        word-break: break-word;
+        max-width: 75%;
+        border: 1px solid black;
+        border-radius: 12px 12px 12px 0;
         padding: 5px;
-        font-size: 1em;
-        margin: 10px 0 10px 0;
-        background: none;
+        margin: 2px 0 2px 0;
       }
 
+      .right span {
+        background: black;
+        color: white;
+        border-radius: 12px 12px 0 12px;
+      }
+
+      header a {
+        padding: 5px;
+        border: 1px solid black;
+        border-radius: 3px;
+      }
+
+      header a:hover {
+        background: #eeeeee;
+      }
+
+      .main-page-left {
+        border-right: 1px solid black;
+        grid-column: 1;
+        grid-row: 2;
+        padding: 10px;
+      }
+
+      .main-page-left ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .main-page-left li {
+        padding: 10px;
+        border-bottom: 1px solid black;
+      }
+
+      .main-page-left li:last-child {
+        border-bottom: none;
+      }
+
+      .main-page-right {
+        border-right: 1px solid black;
+        grid-column: 2;
+        grid-row: 2;
+        padding: 10px;
+        display: grid;
+        grid-template-rows: min-content 1fr min-content;
+        min-height: 0;
+      }
+
+      .main-page-right ul {
+        display: flex;
+        flex-direction: column;
+        overflow-y: scroll;
+      }
+
+      .input-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .input-container span {
+        padding: 5px;
+        font-size: 1em;    
+        border: 1px solid black; 
+        border-right: none;   
+        background: #eeeeee;
+        border-radius: 3px 0 0 3px;
+      }
+
+      .input-container input {
+        padding: 5px;
+        font-size: 1em;        
+        flex-grow: 1;
+        border: 1px solid black;
+        border-radius: 0 3px 3px 0;
+      }
+
+      .find-friends-list li {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .find-friends-list a {
+        padding: 5px;
+        border: 1px solid black;
+        border-radius: 3px;
+      }
+      
+      .find-friends-list a:hover {
+        background: #eeeeee;
+      }
     </style>
   </head>
   <body>
-    <div class="login-border">
-    <div class="login-container">
-      <div class="login-element-left">
-        <h1>Login</h1>
-        <span>email:</span>
-        <input type="text" name="" >
-        <br/>
-        <span>password:</span>
-        <input type="password" name="" >
-        <br/>
-      </div>
-      <div class="login-element-right">
-        <h1 style="color: #158898">Create Account</h1>
-        <span>email:</span>
-        <input type="text" name="">
-        <br/>
-        <span>password:</span>
-        <input type="password" name="">
-        <br/>
-        <span>password:</span>
-        <input type="password" name="">
-        <br/>
-      </div>
+    <div id="app">
+      <router-view @token="window.store.token = $event"></router-view>
     </div>
-    </div>
+    <script type="module">
+      import { store } from '/components/store.js'
+      import protect from '/components/protectedPage.js'
+      import AdminPage from '/components/adminPage.js'
+      import MainPage from '/components/MainPage.js'
+
+      Vue.use(VueRouter)
+
+      let router =  new VueRouter({
+        mode: 'history',
+        routes: [
+          { path: '/app/', component: protect('main-page') },
+          { path: '/app/admin', component: protect('admin-page') },
+        ]
+      });
+
+      var app = new Vue({
+        data: { store },
+        router: router,
+      }).$mount('#app');
+
+    </script>
   </body>
 </html>
