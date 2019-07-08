@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>DinoChat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
     <style media="screen">
@@ -11,7 +12,7 @@
       body {
         padding: 0;
         margin: 0;
-        font-family: sans-serif;
+        font-family: 'Open Sans', sans-serif;
       }
 
       #app {
@@ -31,43 +32,68 @@
         width: 100%;
         height: 100%;
         display: grid;
-        grid-template-columns: minmax(min-content, 400px);
+        grid-template-columns: minmax(min-content, 450px);
         justify-content: center;
         align-items: center;
       }
 
       .login-container .login-border {
-        border: 1px solid black;
-        padding: 20px;
+        border: 1px solid rgb(213, 214, 221);
+        border-radius: 5px;
+        padding: 30px;
       }
 
       .login-container h1 {
-        margin: 20px 0 20px 0;
+        margin: 10px 0 10px 0;
       }
+
+      .login-container input {
+        font-size: 16px;
+        background: rgb(232,240,253);
+        border: 1px solid rgb(213, 214, 221);
+        box-sizing: border-box;
+        margin: 10px 0 10px 0;
+        outline: none;
+        width: 100%;
+        padding: 10px;
+      }
+
+      .login-container input:focus {
+        border-bottom: 1px solid #4e6ab8;
+      }
+
+      button {
+        font-size: 16px;
+        display: block;
+        box-sizing: border-box;
+        color: white;
+        outline: none;
+        height: 32px;
+        border-radius: 16px;
+        background-color: #4e6ab8;
+        border: 1px solid #384d85;
+        padding: 5px 10px;
+      }
+
+      button:hover {
+        background:  #384d85;
+      }
+
+      .login-container p {
+        margin: 10px;
+      }
+
 
       table {
         border-collapse: collapse;
-        border: 1px solid black;
+        border: 1px solid #eeeeee;
       }
 
       td, tr, th {
         padding: 5px;
-        border: 1px solid black;
+        border: 1px solid #eeeeee
       }
 
-      .login-container input {
-        box-sizing: border-box;
-        margin: 10px 0 10px 0;
-        width: 100%;
-        height: 30px;
-      }
-
-      .login-container button {
-        box-sizing: border-box;
-        margin: 5px 0 5px 0;
-        width: 100%;
-        height: 30px;
-      }
 
       .main-page {
         display: grid;
@@ -79,7 +105,7 @@
 
       .main-page header {
         grid-column: 1 / span 2;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid #cccccc;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -90,10 +116,24 @@
         margin: 0;
       }
 
+      .main-page .mobile-toolbar h1 {
+        margin: 10px;
+      }
+
+      .main-page .mobile-toolbar {
+        border-bottom: 1px solid #eeeeee;
+      }
+
+      .main-page .message-input {
+        border-top: 1px solid #eeeeee;
+        padding-top: 10px;
+      }
+
       .messages-list {
-        list-style-type: none;
         padding: 0;
-        overflow: hidden;
+        display: flex;
+        overflow: scroll;
+        flex-direction: column-reverse;
       }
 
       .right {
@@ -104,36 +144,34 @@
         display: inline-block;
         word-break: break-word;
         max-width: 75%;
-        border: 1px solid black;
+        min-height: 1em;
+        min-width: 25px;
+        border: 1px solid #eeeeee;
         border-radius: 12px 12px 12px 0;
         padding: 5px;
         margin: 2px 0 2px 0;
+        background: #dddddd;
+      }
+
+      .messages-list img {
+        max-width: 300px;
+        height: auto;
       }
 
       .right span {
-        background: black;
+        background-color: #4e6ab8;
         color: white;
         border-radius: 12px 12px 0 12px;
       }
-
-      header a {
-        padding: 5px;
-        border: 1px solid black;
-        border-radius: 3px;
-      }
-
-      header a:hover {
-        background: #eeeeee;
-      }
-
+ 
       .main-page-left {
-        border-right: 1px solid black;
+        border-right: 1px solid #cccccc;
         grid-column: 1;
         grid-row: 2;
         padding: 10px;
       }
 
-      .main-page-left ul {
+      ul {
         list-style-type: none;
         margin: 0;
         padding: 0;
@@ -141,7 +179,7 @@
 
       .main-page-left li {
         padding: 10px;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid #eeeeee;
       }
 
       .main-page-left li:last-child {
@@ -149,19 +187,14 @@
       }
 
       .main-page-right {
-        border-right: 1px solid black;
+        overflow: hidden;
         grid-column: 2;
         grid-row: 2;
         padding: 10px;
         display: grid;
         grid-template-rows: min-content 1fr min-content;
+        grid-template-columns: 100%;
         min-height: 0;
-      }
-
-      .main-page-right ul {
-        display: flex;
-        flex-direction: column;
-        overflow-y: scroll;
       }
 
       .input-container {
@@ -169,36 +202,65 @@
         align-items: center;
       }
 
-      .input-container span {
-        padding: 5px;
-        font-size: 1em;    
-        border: 1px solid black; 
-        border-right: none;   
-        background: #eeeeee;
-        border-radius: 3px 0 0 3px;
+      .input-container button {
+        margin-right: 5px;
       }
 
-      .input-container input {
-        padding: 5px;
-        font-size: 1em;        
+      input[type="text"], input[type="password"]{
+        padding: 5px 10px;
+        font-size: 16px;        
         flex-grow: 1;
-        border: 1px solid black;
-        border-radius: 0 3px 3px 0;
+        outline: none;
+        border: 1px solid #cccccc;
+        border-radius: 16px;
+        box-sizing: border-box;
       }
 
+      .sticker-container {
+        max-width: 100%;
+        overflow: auto;
+      }
+      .sticker-container img {
+        height: 200px;
+        width: auto;
+      }
+      
       .find-friends-list li {
+        padding: 10px;
+        border-bottom: 1px solid #eeeeee;
         display: flex;
         justify-content: space-between;
       }
 
       .find-friends-list a {
         padding: 5px;
-        border: 1px solid black;
+        border: 1px solid #eeeeee;
         border-radius: 3px;
       }
       
       .find-friends-list a:hover {
         background: #eeeeee;
+      }
+
+      .tab-container h1 {
+        margin: 20px 0;
+      }
+
+      .tab-container-header {
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .tab-container-header span {
+        flex-grow: 1;
+        display: block;
+        box-sizing: border-box;
+        border-right: 1px solid #eeeeee;
+        text-align: center;
+      }
+
+      .tab-container-header span:last-child {
+        border-right: none;
       }
     </style>
   </head>
@@ -208,8 +270,8 @@
     </div>
     <script type="module">
       import { store } from '/components/store.js'
-      import protect from '/components/protectedPage.js'
-      import AdminPage from '/components/adminPage.js'
+      import protect from '/components/ProtectedPage.js'
+      import AdminPage from '/components/AdminPage.js'
       import MainPage from '/components/MainPage.js'
 
       Vue.use(VueRouter)
@@ -222,9 +284,33 @@
         ]
       });
 
+      let Sonload = function() {
+        fetch(`${store.url}/api/whoami`, {
+          headers: {
+            'Accept': 'application/json',
+          }
+        }).then((response) => {
+          if (response.status === 200) {
+            response.json().then((data) => {
+              if (data.success) {
+                console.log(data.user);
+                store.user = data.user;
+              } else {
+                this.errorMessage = data.message;
+              }
+            });
+          } else {
+            console.log('error: status code: ' + response.status);
+          }
+        
+        }).catch(function(err) {
+          console.log('Fetch Error :-S', err);
+        });
+      }
+
       var app = new Vue({
         data: { store },
-        router: router,
+        router: router
       }).$mount('#app');
 
     </script>

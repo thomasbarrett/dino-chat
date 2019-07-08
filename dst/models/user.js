@@ -7,17 +7,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 class User {
 }
+function sanitize(user) {
+    let { password } = user, result = __rest(user, ["password"]);
+    return result;
+}
+exports.sanitize = sanitize;
+function sanitizeUsers(users) {
+    return users.map(user => sanitize(user));
+}
+exports.sanitizeUsers = sanitizeUsers;
 class UserDatabase {
     constructor(client, name) {
         this.users = client.db(name).collection("users");
     }
-    getUser(username) {
+    getUser(username, sanitized) {
         return __awaiter(this, void 0, void 0, function* () {
-            let cursor = this.users.find({ username })
-                .project({ password: 0, admin: 0 });
+            let cursor = this.users.find({ username });
             return yield cursor.next();
         });
     }

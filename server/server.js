@@ -1,12 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser')
+var cookieParser = require('cookie-parser')
 const process = require('process')
 var WebSocket = require('ws');
 const jwt = require('jsonwebtoken')
 const MongoClient = require('mongodb').MongoClient;
 const mongo_uri = "mongodb+srv://thomasbarrett:foobar@dino-chat-fe6ea.mongodb.net/test?retryWrites=true&w=majority";
 const client = new MongoClient(mongo_uri, { useNewUrlParser: true });
-const UserDatabase = require('../dst/models/user.js').UserDatabase;
+const {UserDatabase, sanitize, sanitizeUsers} = require('../dst/models/user.js');
 let users = null;
 let messages = null;
 let userDatabase = null;
@@ -14,45 +15,92 @@ let userDatabase = null;
 const app = express();
 var http = require('http').createServer(app);
 
+app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.set('superSecret', 'pip-pip-cheerio'); // secret variable
 
+/*==-----------------------------------------------------------------------==*\
+| WEBSOCKETS MESSAGE FORWARDING
+\*==-----------------------------------------------------------------------==*/
+
 const wss = new WebSocket.Server({
   server: http,
-  verifyClient: function (info, cb) {
-      var token = info.req.headers['sec-websocket-protocol'].split(', ')[1]
-      if (!token)
-          cb(false, 401, 'Unauthorized')
-      else {
-          jwt.verify(token, app.get('superSecret'), function (err, decoded) {
-              if (err) {
-                  cb(false, 401, 'Unauthorized')
-              } else {
-                  info.req.user = decoded //[1]
-                  cb(true)
-              }
-          })
-
-      }
+  verifyClient: function (info, callback) {
+    var token = info.req.headers['cookie'].split('=')[1];
+    if (!token) {
+      callback(false, 401, 'unauthorized');
+    } else {
+      jwt.verify(token, app.get('superSecret'), function (error, decoded) {
+        if (error) {
+          callback(false, 401, 'unauthorized');
+        } else {
+          info.req.user = decoded;
+          callback(true);
+        }
+      })
+    }
   }
 });
-webSockets = {};
-// API ROUTES -------------------
+
+sockets = {};
+
+wss.on('connection', function connection(ws, req) {
+  // create a new entry in username -> socket mapping
+  sockets[req.user.username] = ws
+
+  // delete entry in username -> socket mapping
+  ws.on('close', () => {
+    delete sockets[req.user.username]
+  });
+
+  ws.on('message', (message) => {
+    data = JSON.parse(message);
+
+    if (data.type === 'send-message') {
+
+      messages.updateOne(
+        { members: data.members.sort() },
+        { $push: { messages: { $each: data.messages } } }
+      );
+
+      // forward message to all recipients
+      data.members.forEach((username) => {
+        // do not forward message to sender
+        if (username != req.user.username) {
+          // recipient will have a socket if connected
+          recipientSocket = sockets[username];
+          // send message to recipient if connected
+          if (recipientSocket) {
+            recipientSocket.send(message);
+          }
+        }
+      })
+    }
+  });
+});
+
+/*==-----------------------------------------------------------------------==*\
+| API ROUTES - PUBLIC
+\*==-----------------------------------------------------------------------==*/
+
+app.use('/app*', (req, res) => {
+  res.sendFile(process.cwd() + '/index.html');
+});
+
+app.use(express.static('.'));
 
 // get an instance of the router for api routes
 var apiRoutes = express.Router();
 
 // route middleware to verify a token
 apiRoutes.use(function(req, res, next) {
-
-  var token = req.get('Authorization') && req.get('Authorization').split(' ')[1];
-  if (token) {
-    jwt.verify(token, app.get('superSecret'), function(err, decoded) {
-      if (err) {
+  if (req.cookies.token) {
+    jwt.verify(req.cookies.token, app.get('superSecret'), function(error, decoded) {
+      if (error) {
         return res.json({
           success: false,
-          message: 'Failed to authenticate token.'
+          message: 'failed to authenticate token'
         });
       } else {
         req.user = decoded;
@@ -62,97 +110,89 @@ apiRoutes.use(function(req, res, next) {
   } else {
     return res.status(403).send({
         success: false,
-        message: 'No token provided.'
+        message: 'failed to authenticate token'
     });
   }
 });
 
-// route to authenticate a user (POST http://localhost:8080/api/authenticate)
+function create_token(user, duration) {
+
+  const payload = {
+    _id: user._id,
+    username: user.username,
+    admin: user.admin
+  };
+
+  return jwt.sign(payload, app.get('superSecret'), {
+    expiresIn: duration
+  });
+}
+
 app.post('/api/authenticate', function(req, res) {
-  users.findOne({
-    username: req.body.username
-  }, function(err, user) {
-    if (err) throw err;
-    if (!user) {
-      res.json({ success: false, message: `Authentication failed. User ${req.body.username} not found.` });
-    } else if (user) {
-      if (user.password != req.body.password) {
-        res.json({ success: false, message: 'Authentication failed. Wrong password.' });
-      } else if (req.body.admin && !user.admin) {
-        res.json({ success: false, message: 'Authentication failed. Admin Required' });
+  const duration = 86400;
+  userDatabase.getUser(req.body.username).then(user => {
+    if (user) {
+      if (user.password === req.body.password) {
+        res.cookie('token', create_token(user, duration), { httpOnly: true, expire: duration })
+           .json({ success: true, message: 'login successful', user: sanitize(user) });
       } else {
-        const payload = {
+        console.log(user.password + ' ' + req.body.password);
+        res.json({ success: false, message: 'incorrect password' });
+      }
+    } else {
+      res.json({ success: false, message: `user not found: ${req.body.username}` });
+    }
+  });
+});
+
+app.post('/api/createAccount', function(req, res) {
+  if (req.body.username && req.body.password) {
+    userDatabase.getUser(req.body.username).then(existingUser => {
+      if (!existingUser) {
+
+        const user = {
           username: req.body.username,
-          admin: user.admin
+          password: req.body.password,
+          admin: false,
+          friends: []
         };
-        var token = jwt.sign(payload, app.get('superSecret'), {
-          expiresIn: "24h"
-        });
-        res.json({
-          success: true,
-          message: 'Enjoy your token!',
-          token: token,
-          user: {
-            username: user.username,
-            admin: user.admin
+
+        users.insertOne(user, function(error, response) {
+          if (error) {
+            res.json({ success: false, message: 'try again later' });
+          } else {
+            const duration = 86400;
+            res.cookie('token', create_token(user, duration), { httpOnly: true, expire: duration })
+               .json({ success: true, message: 'account creation successful', user: sanitize(user)});
           }
         });
+      } else {
+        res.json({ success: false, message: 'username not available' });
       }
-    }
-  });
-});
-
-
-// route to authenticate a user (POST http://localhost:8080/api/authenticate)
-app.post('/api/createAccount', function(req, res) {
-  if (!req.body.username || !req.body.password) {
-    res.json({ success: false, message: 'username and password required' });
-    next();
+    });
+  } else {
+    res.json({ success: false, message: 'invalid username and password' });
   }
-
-  users.findOne({
-    username: req.body.username
-  }, function(err, user) {
-    if (err) throw err;
-    if (user) {
-      res.json({ success: false, message: 'Authentication failed. Username not available.' });
-    } else {
-      users.insertOne({
-        username: req.body.username,
-        password: req.body.password,
-        admin: false,
-        friends: []
-      }, function(error, response) {
-        if (error) {
-          res.json({ success: false, message: 'unknown error' });
-        } else {
-          const payload = {
-            username: req.body.username,
-            admin: false
-          };
-          var token = jwt.sign(payload, app.get('superSecret'), {
-            expiresIn: "24h"
-          });
-          res.json({
-            success: true,
-            message: 'account created',
-            token: token,
-            user: {
-              username: req.body.username,
-              admin: false
-            }
-          });
-        }
-      });
-    }
-  });
 });
+
+/*==-----------------------------------------------------------------------==*\
+| API ROUTES - PROTECTED
+\*==-----------------------------------------------------------------------==*/
 
 app.use('/api', apiRoutes);
 
+app.get('/api/users/:username', (req, res) => {
+  userDatabase.getUser(req.params.username).then(user => {
+    res.json({ success: true, user: santizie(user)})
+  });
+});
+
 app.get('/api/users', (req, res) => {
-  userDatabase.queryUsers(req.query.username || '', 1, 10).then((users) => {
-    res.json({ success: true, users: users})
+  const query = req.query.query || '';
+  const page = parseInt(req.query.page) || 1;
+  const count = parseInt(req.query.count) || 10;
+  userDatabase.queryUsers(query, page, count).then((users) => {
+    res.json({ success: true, users: sanitizeUsers(users)})
   });
 });
 
@@ -180,10 +220,10 @@ app.get('/api/chats', (req, res) => {
   let members = req.query.members.split('|').sort();
   if (members.includes(req.user.username)) {
   messages.find({ members })
-          .project({messages: {$slice: -20}})
+          .project({messages: {$slice: -50}})
           .toArray(function(error, result) {
             if (error) throw error;
-            if (result) {
+            if (result && result[0]) {
               res.json({ success: true, messages: result[0].messages});
             } else {
               res.json({ success: true, messages: [] });
@@ -193,7 +233,6 @@ app.get('/api/chats', (req, res) => {
     res.json({ success: false, message: 'you do not have permission' });
   }
 });
-
 
 app.post('/api/chats/create', (req, res) => {
   let members = req.query.members.split('|').sort();
@@ -232,52 +271,13 @@ app.post('/api/chats/send', (req, res) => {
   }
 });
 
-wss.on('connection', function connection(ws, req) {
-  ws.user = req.user;
-  webSockets[ws.user.username] = ws
-  ws.on('message', (message) => {
-    obj = JSON.parse(message);
-    if (obj.type === 'send-message') {
-      messages.updateOne(
-        { members: obj.members.sort() },
-        { $push: { messages: { $each: obj.messages } } },
-        function(err, result) {
-          if (err) {
-            throw err;
-          } else {
-            ws.send(JSON.stringify({ type: 'info', success: true, message: 'message sent' }));
-          }
-        }
-      );
-      obj.members.forEach((username) => {
-        if (username != req.user.username) {
-          recipient = webSockets[username];
-          if (recipient) {
-            console.log('message send')
-            recipient.send(message);
-          } else {
-            console.log(`recipient ${username} not connected`)
-          }
-        }
-      })
-
-    }
-  });
-  ws.on('close', () => {
-    delete webSockets[ws.user.username]
-  });
-});
-
-app.use('/app*', (req, res) => {
-  res.sendFile(process.cwd() + '/index.html');
-});
-
-app.use(express.static('.'));
+/*==-----------------------------------------------------------------------==*\
+| STARTUP ROUTINE
+\*==-----------------------------------------------------------------------==*/
 
 client.connect(err => {
   users = client.db("dino-chat").collection("users");
   messages = client.db("dino-chat").collection("messages");
   userDatabase = new UserDatabase(client, 'dino-chat');
-  
-  http.listen(3000, () => console.log('Gator app listening on port 3000!'));
+  http.listen(3000, () => console.log('Triceratalk Server Initiated'));
 });

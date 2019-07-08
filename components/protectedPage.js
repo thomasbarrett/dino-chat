@@ -1,22 +1,13 @@
 import { store } from './store.js'
-import LoginForm from './loginForm.js'
+import LoginPage from './LoginPage.js'
 
-Vue.component('protected-page', {
-  props: ['content'],
-  computed: {
-    displayedComponent: function() {
-      if (!store.token) {
-        return 'login-page';
-      } else {
-        return this.content;
-      }
-    }
-  },
-  template: '<component :is="displayedComponent"></component>'
-});
-
-export default function protect(component) {
+export default function protect(content) {
   return {
-    template: `<protected-page content="${component}"/>`
+    computed: {
+      displayed: function() {
+        return store.user ? content: 'login-page';
+      }
+    },
+    template: '<component :is="displayed"></component>'
   }
 }

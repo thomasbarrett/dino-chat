@@ -1,43 +1,75 @@
 import { store } from './store.js'
 
-export default {
-  get: function(method, params) {
-    fetch(`http://localhost:3000/api/${method}`, {
+const api = {
+  get: function(method) {
+    return fetch(`${store.url}/api/${method}`, {
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${store.token}`
       },
-    }).then((response) => {
-      if (response.status !== 200) {
-        console.log('Error: Status Code: ' + response.status);
-        return;
+    }).then(response => {
+      if (response.status === 200) {
+        return response.json(); 
+      } else {
+        return Promise.reject({ message: `status code: ${response.status}` });
       }
-      // Examine the text in the response
-      return response.json();
-
-    }).catch(function(err) {
-      console.log('Fetch Error :-S', err);
+    }).then(data => {
+      if (data.success) {
+        return data; 
+      } else {
+        return Promise.reject({ message: data.message });
+      }
     });
   },
   post: function(method, params) {
-    fetch(`http://localhost:3000/api/${method}`, {
-      method: 'POST',
+    return fetch(`${store.url}/api/${method}`, {
+      method: 'post',
       headers: {
-        'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${store.token}`
+        'Accept': 'application/json',
       },
       body: JSON.stringify(params)
-    }).then((response) => {
-      if (response.status !== 200) {
-        console.log('Error: Status Code: ' + response.status);
-        return;
+    }).then(response => {
+      if (response.status === 200) {
+        return response.json(); 
+      } else {
+        return Promise.reject({ message: `status code: ${response.status}` });
       }
-      // Examine the text in the response
-      return response.json();
-
-    }).catch(function(err) {
-      console.log('Fetch Error :-S', err);
+    }).then(data => {
+      if (data.success) {
+        return data; 
+      } else {
+        return Promise.reject({ message: data.message });
+      }
     });
   }
 }
+
+function authenticate(username, password) {
+  return api.post('authenticate', {username, password});
+}
+
+function createAccount(username, password) {
+  return api.post('createAccount', {username, password});
+}
+
+function queryUsers(query, page, count) {
+  return api.get(`users?query=${query}&page=${page}&count=${count}`);
+}
+
+function addFriends(user, friends) {
+  return api.post(`users/${user}/friends`, {friends});
+}
+
+function getFriends(user) {
+  return api.get(`users/${user}/friends`);
+}
+
+function loadChat(members) {
+  return api.get(`chats?members=${members.join('|')}`);
+}
+
+function createChat(members) {
+  return api.post(`chats/create?members=${members.join('|')}`);
+}
+
+export {authenticate, createAccount, queryUsers, loadChat, createChat, addFriends, getFriends};

@@ -8,15 +8,23 @@ class User {
   friends: string[];
 }
 
+function sanitize(user: User) {
+  let {password, ...result} = user;
+  return result;
+}
+
+function sanitizeUsers(users: User[]) {
+  return users.map(user => sanitize(user));
+}
+
 class UserDatabase {
   users: Collection<User>;
   constructor(client: MongoClient, name: string) {
     this.users = client.db(name).collection("users")
   }
 
-  async getUser(username: string) {
+  async getUser(username: string, sanitized: boolean) {
     let cursor = this.users.find({username})
-                           .project({password: 0, admin: 0});
 
     return await cursor.next();
   }
@@ -47,4 +55,4 @@ class UserDatabase {
   }
 }
 
-export { UserDatabase }
+export { UserDatabase, sanitize, sanitizeUsers}
